@@ -8,21 +8,28 @@ import java.awt.image.BufferedImage;
 public class Main{
     private static JFrame window;
     public static final IntVec2D wndres = new IntVec2D(850,850);
-    public static Button button[] = new Button[16];
+    public static Button[] button = new Button[16];
     public static MyPanel wincontext = new MyPanel();
-    public int colorSel = 0;
-    public static void main(String args[]){
+    public static int colorSel;
+    public static int[] secretPins = new int[4];
+    public static void main(String[] args){
         window = new JFrame("mastermind");
         window.setSize(wndres.x+16,wndres.y-11);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setVisible(true);
         window.add(wincontext);
+
         button[Button.buttonC] = new Button(new IntVec2D(700,40),50,new RGB(255,0,0),0);
         button[Button.buttonC] = new Button(new IntVec2D(700,90),50,new RGB(0,255,0),1);
         button[Button.buttonC] = new Button(new IntVec2D(700,140),50,new RGB(0,0,255),2);
         button[Button.buttonC] = new Button(new IntVec2D(700,190),50,new RGB(255,255,0),3);
         button[Button.buttonC] = new Button(new IntVec2D(700,240),50,new RGB(255,0,255),4);
         button[Button.buttonC] = new Button(new IntVec2D(700,290),50,new RGB(255,255,255),5);
+
+        button[Button.buttonC] = new Button(new IntVec2D(718,500),50,new RGB(30,30,30),6);
+        button[Button.buttonC] = new Button(new IntVec2D(718,585),50,new RGB(30,30,30),7);
+        button[Button.buttonC] = new Button(new IntVec2D(718,670),50,new RGB(30,30,30),8);
+        button[Button.buttonC] = new Button(new IntVec2D(718,755),50,new RGB(30,30,30),9);
 
         Draw.drawCircle(new IntVec2D(700,390),50,new RGB(255,0,0));
 
@@ -43,6 +50,7 @@ public class Main{
 
         wincontext.b.setRGB(0,0,wndres.x,wndres.y,MyPanel.videoMem,0,wndres.y);
         wincontext.repaint();
+
         for(;;){
             long time = System.nanoTime();
             try{
@@ -77,6 +85,28 @@ class Button{
 class Draw{
     private static int RGBtoInt(RGB color){
         return color.b+(color.g<<8)+(color.r<<16);
+    }
+    static void drawPin(IntVec2D offset,int type){
+        switch(type){
+            case 0:
+                Draw.drawCircle(offset,50,new RGB(255,0,0));
+                break;
+            case 1:
+                Draw.drawCircle(offset,50,new RGB(0,255,0));
+                break;
+            case 2:
+                Draw.drawCircle(offset,50,new RGB(0,0,255));
+                break;
+            case 3:
+                Draw.drawCircle(offset,50,new RGB(255,255,0));
+                break;
+            case 4:
+                Draw.drawCircle(offset,50,new RGB(255,0,255));
+                break;
+            case 5:
+                Draw.drawCircle(offset,50,new RGB(255,255,255));
+                break;
+        }
     }
     static void drawRect(IntVec2D offset,IntVec2D size,RGB color){
         int fcolor = Draw.RGBtoInt(color);
@@ -147,22 +177,29 @@ class MyPanel extends JPanel implements MouseListener{
             if(mousePos.y>Main.button[i].pos.x&&mousePos.y<Main.button[i].pos.x+Main.button[i].size&&mousePos.x>Main.button[i].pos.y&&mousePos.x<Main.button[i].pos.y+Main.button[i].size) {
                 switch(Main.button[i].id){
                     case 0:
-                        Draw.drawCircle(new IntVec2D(700,390),50,new RGB(255,0,0));
-                        break;
                     case 1:
-                        Draw.drawCircle(new IntVec2D(700,390),50,new RGB(0,255,0));
-                        break;
                     case 2:
-                        Draw.drawCircle(new IntVec2D(700,390),50,new RGB(0,0,255));
-                        break;
                     case 3:
-                        Draw.drawCircle(new IntVec2D(700,390),50,new RGB(255,255,0));
-                        break;
                     case 4:
-                        Draw.drawCircle(new IntVec2D(700,390),50,new RGB(255,0,255));
-                        break;
                     case 5:
-                        Draw.drawCircle(new IntVec2D(700,390),50,new RGB(255,255,255));
+                        Draw.drawPin(new IntVec2D(700,390),Main.button[i].id);
+                        Main.colorSel = Main.button[i].id;
+                        break;
+                    case 6:
+                        Draw.drawPin(new IntVec2D(718,500),Main.colorSel);
+                        Main.secretPins[0] = Main.colorSel;
+                        break;
+                    case 7:
+                        Draw.drawPin(new IntVec2D(718,585),Main.colorSel);
+                        Main.secretPins[1] = Main.colorSel;
+                        break;
+                    case 8:
+                        Draw.drawPin(new IntVec2D(718,670),Main.colorSel);
+                        Main.secretPins[2] = Main.colorSel;
+                        break;
+                    case 9:
+                        Draw.drawPin(new IntVec2D(718,755),Main.colorSel);
+                        Main.secretPins[3] = Main.colorSel;
                         break;
                 }
                 Main.wincontext.b.setRGB(0,0,Main.wndres.x,Main.wndres.y,MyPanel.videoMem,0,Main.wndres.y);
@@ -170,25 +207,5 @@ class MyPanel extends JPanel implements MouseListener{
                 break;
             }
         }
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-
     }
 }
