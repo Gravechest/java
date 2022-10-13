@@ -1,4 +1,3 @@
-import java.util.Arrays;
 import java.util.Scanner;
 
 //gare manier om kleuren te krijgen
@@ -57,24 +56,22 @@ public class Main {
     static final int BOARDSZ = 64;
     static byte[] board = new byte[BOARDSZ+12];
     static Player[] player;
-    static int rndSeed;
     //https://en.wikipedia.org/wiki/Xorshift
     static int throwDice(){
-        int t = (int)(System.currentTimeMillis()+rndSeed);
+        int t = (int)(System.nanoTime());
         t ^= t >> 3;
         t ^= t << 7;
         t ^= t >> 2;
-        rndSeed++;
         return t % 6 + 1;
     }
     static void printBoard(){
         //verwisseld de spelerkleur met het bordid & geeft aan dat er een speler op staat
         for(int i = 0;i < Player.Count;i++){
             if((board[player[i].pos]&Vak.PLAYER)==0) {
-                board[player[i].pos] ^= player[i].consoleColorId;
+                board[player[i].pos]     ^= player[i].consoleColorId;
                 player[i].consoleColorId ^= board[player[i].pos];
-                board[player[i].pos] ^= player[i].consoleColorId;
-                board[player[i].pos] |= Vak.PLAYER;
+                board[player[i].pos]     ^= player[i].consoleColorId;
+                board[player[i].pos]     |= Vak.PLAYER;
             }
         }
         for(int i = 0;i < BOARDSZ;i+=9) {
@@ -120,10 +117,10 @@ public class Main {
         //verwisseld de boel weer terug en untoggle de speler flag
         for(int i = 0;i < Player.Count;i++){
             if((board[player[i].pos]&Vak.PLAYER)==Vak.PLAYER) {
-                board[player[i].pos] &= ~Vak.PLAYER;
-                board[player[i].pos] ^= player[i].consoleColorId;
+                board[player[i].pos]     &= ~Vak.PLAYER;
+                board[player[i].pos]     ^= player[i].consoleColorId;
                 player[i].consoleColorId ^= board[player[i].pos];
-                board[player[i].pos] ^= player[i].consoleColorId;
+                board[player[i].pos]     ^= player[i].consoleColorId;
             }
         }
     }
@@ -295,3 +292,24 @@ public class Main {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
