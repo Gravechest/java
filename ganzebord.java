@@ -120,43 +120,62 @@ public class Main {
             }
         }
     }
+    static void playerTrapped(){
+        for(int i = 0;i < Player.Count;i++){
+            if(i != Player.Beurt && player[i].pos < player[Player.Beurt].pos){
+                player[Player.Beurt].playersBehind++;
+            }
+        }
+        if (player[Player.Beurt].playersBehind == 0) {
+            player[Player.Beurt].beurtOverslaan = true;
+        }
+    }
     static void playerTurn(int id,int posBuf){
         switch(board[posBuf]){
-            case Vak.HERHAAL:
-                posBuf += posBuf - player[Player.Beurt].pos;
-                playerTurn(id,posBuf);
-                break;
-            case Vak.BRUG:
-                posBuf = 12;
-                break;
-            case Vak.HERBERG:
-                player[Player.Beurt].beurtOverslaan = true;
-                break;
-            case Vak.PUT,Vak.GEVANGENIS:
-                for(int i = 0;i < Player.Count;i++){
-                    if(i != Player.Beurt && player[i].pos < player[Player.Beurt].pos){
-                        player[Player.Beurt].playersBehind++;
-                    }
-                }
-                if (player[Player.Beurt].playersBehind == 0) {
-                    player[Player.Beurt].beurtOverslaan = true;
-                }
-                break;
-            case Vak.VERDWAALD:
-                posBuf = 37;
-                break;
-            case Vak.DOOD:
-                posBuf = 0;
-                break;
-            case Vak.FINISH:
-                System.out.println("het spel is afgelopen, de " + player[Player.Beurt].kleur + " heeft gewonnen");
-                System.exit(0);
-                break;
-            case Vak.TE_VER:
-                posBuf -= (64-posBuf)*2;
-                break;
+        case Vak.HERHAAL:
+            System.out.println("Je gaat 2X zo hard");
+            posBuf += posBuf - player[Player.Beurt].pos;
+            playerTurn(id,posBuf);
+            break;
+        case Vak.BRUG:
+            System.out.println("Het bruggetje helpt je naar vakje 12");
+            posBuf = 12;
+            break;
+        case Vak.HERBERG:
+            System.out.println("Je overnacht in de herberg, je doet een ronde niet meer mee");
+            player[Player.Beurt].beurtOverslaan = true;
+            break;
+        case Vak.GEVANGENIS:
+            System.out.println("Je bent in de gevangenis gekomen!");
+            playerTrapped();
+            break;
+        case Vak.PUT:
+            System.out.println("Je bent in de put gekomen!");
+            playerTrapped();
+            break;
+        case Vak.VERDWAALD:
+            System.out.println("Je bent verdwaald, terug naar vakje 37");
+            posBuf = 37;
+            break;
+        case Vak.DOOD:
+            System.out.println("Je bent dood, begin maar opnieuw");
+            posBuf = 0;
+            break;
+        case Vak.FINISH:
+            System.out.println("het spel is afgelopen, de " + player[Player.Beurt].kleur + " heeft gewonnen");
+            System.exit(0);
+            break;
+        case Vak.TE_VER:
+            posBuf -= (64-posBuf)*2;
+            break;
         }
         player[Player.Beurt].movePlayer(posBuf);
+    }
+    static void playerTurn(Scanner scan){
+        scan.next();
+        int diceValue = throwDice() + throwDice();
+        System.out.println("je hebt " + diceValue + " gegooit");
+        playerTurn(Player.Beurt,player[Player.Beurt].pos+diceValue);
     }
     public static void main(String[] args){
         for(int i = 9;i < BOARDSZ;i+=9){
@@ -245,17 +264,11 @@ public class Main {
                     }
                     if(playersBehind != player[Player.Beurt].playersBehind){
                         player[Player.Beurt].playersBehind = 0;
-                        scan.next();
-                        int diceValue = throwDice() + throwDice();
-                        System.out.println("je hebt " + diceValue + " gegooit");
-                        playerTurn(Player.Beurt,diceValue);
+                        playerTurn(scan);
                     }
                 }
                 else{
-                    scan.next();
-                    int diceValue = throwDice() + throwDice();
-                    System.out.println("je hebt " + diceValue + " gegooit");
-                    playerTurn(Player.Beurt,diceValue);
+                    playerTurn(scan);
                 }
                 Player.Beurt++;
                 if(Player.Beurt == Player.Count){
