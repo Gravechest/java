@@ -1,10 +1,26 @@
 import java.util.Arrays;
 import java.util.Scanner;
 
+class ConsoleColor{
+    static final String RESET = "\u001B[0m";
+    static final String BLACK = "\u001B[30m";
+    static final String RED = "\u001B[31m";
+    static final String GREEN = "\u001B[32m";
+    static final String YELLOW = "\u001B[33m";
+    static final String BLUE = "\u001B[34m";
+    static final String PURPLE = "\u001B[35m";
+    static final String CYAN = "\u001B[36m";
+    static final String WHITE = "\u001B[37m";
+}
+
 class Player{
+    static final String[] playerColors = {"rood","groen","geel","blauw","zwart","wit"};
+    static final String[] playerConsoleColors = {ConsoleColor.RED,ConsoleColor.GREEN,ConsoleColor.YELLOW,ConsoleColor.BLUE,ConsoleColor.BLACK,ConsoleColor.WHITE};
+
     static int Count;
     static int Beurt;
 
+    int consoleColorId;
     int playersBehind;
     boolean beurtOverslaan;
     int pos;
@@ -48,52 +64,64 @@ public class Main {
     }
     static void printBoard(){
         for(int i = 0;i < Player.Count;i++){
-            board[player[i].pos] |= Vak.PLAYER;
+            if((board[player[i].pos]&Vak.PLAYER)==0) {
+                board[player[i].pos] ^= player[i].consoleColorId;
+                player[i].consoleColorId ^= board[player[i].pos];
+                board[player[i].pos] ^= player[i].consoleColorId;
+                board[player[i].pos] |= Vak.PLAYER;
+            }
         }
         for(int i = 0;i < BOARDSZ;i+=9) {
             for (int i2 = 0;i2 < 9;i2++) {
                 System.out.print('[');
-                if ((board[i+i2] & (byte) 0x80) == 0) {
+                if ((board[i+i2] & Vak.PLAYER) == 0) {
                     switch (board[i+i2]) {
-                        case Vak.HERHAAL:
-                            System.out.print('G');
-                            break;
-                        case Vak.BRUG:
-                            System.out.print('B');
-                            break;
-                        case Vak.HERBERG:
-                            System.out.print('H');
-                            break;
-                        case Vak.PUT:
-                            System.out.print('P');
-                            break;
-                        case Vak.VERDWAALD:
-                            System.out.print('D');
-                            break;
-                        case Vak.GEVANGENIS:
-                            System.out.print('#');
-                            break;
-                        case Vak.DOOD:
-                            System.out.print('!');
-                            break;
-                        default:
-                            System.out.print(' ');
-                            break;
+                    case Vak.HERHAAL:
+                        System.out.print('G');
+                        break;
+                    case Vak.BRUG:
+                        System.out.print('B');
+                        break;
+                    case Vak.HERBERG:
+                        System.out.print('H');
+                        break;
+                    case Vak.PUT:
+                        System.out.print('P');
+                        break;
+                    case Vak.VERDWAALD:
+                        System.out.print('D');
+                        break;
+                    case Vak.GEVANGENIS:
+                        System.out.print('#');
+                        break;
+                    case Vak.DOOD:
+                        System.out.print('!');
+                        break;
+                    default:
+                        System.out.print(' ');
+                        break;
                     }
                 }
                 else {
+                    System.out.print(Player.playerConsoleColors[board[i+i2] & ~Vak.PLAYER]);
                     System.out.print('@');
+                    System.out.print(ConsoleColor.RESET);
                 }
                 System.out.print(']');
             }
             System.out.print("\n");
         }
         for(int i = 0;i < Player.Count;i++){
-            board[player[i].pos] &= ~Vak.PLAYER;
+            if((board[player[i].pos]&Vak.PLAYER)==Vak.PLAYER) {
+                board[player[i].pos] &= ~Vak.PLAYER;
+                board[player[i].pos] ^= player[i].consoleColorId;
+                player[i].consoleColorId ^= board[player[i].pos];
+                board[player[i].pos] ^= player[i].consoleColorId;
+            }
         }
     }
     static void playerTurn(int id,int posBuf){
-        switch(board[posBuf]) {
+        switch(board[posBuf]){
             case Vak.HERHAAL:
                 posBuf += posBuf - player[Player.Beurt].pos;
                 playerTurn(id,posBuf);
@@ -119,6 +147,13 @@ public class Main {
                 break;
             case Vak.DOOD:
                 posBuf = 0;
+                break;
+            case Vak.FINISH:
+                System.out.println("het spel is afgelopen, de " + player[Player.Beurt].kleur + " heeft gewonnen");
+                System.exit(0);
+                break;
+            case Vak.TE_VER:
+                posBuf -= (64-posBuf)*2;
                 break;
         }
         player[Player.Beurt].movePlayer(posBuf);
@@ -148,8 +183,17 @@ public class Main {
 
         for (int i = 0; i < Player.Count; i++) {
             player[i] = new Player();
-            System.out.print("Welke kleur?");
-            player[i].kleur = scan.next();
+            System.out.println("Welke kleur?");
+            System.out.println("rood =  0");
+            System.out.println("groen = 1");
+            System.out.println("geel =  2");
+            System.out.println("blauw = 3");
+            System.out.println("zwart = 4");
+            System.out.println("wit =   5");
+            int colSel = scan.nextInt();
+            player[i].consoleColorId = colSel;
+            player[i].kleur = Player.playerColors[colSel];
+
         }
         int highestThrow = 0;
 
@@ -161,6 +205,7 @@ public class Main {
                 highestThrow = dobbelWaarde;
             }
         }
+
         System.out.println("speler " + player[Player.Beurt].kleur + " mag beginnen");
         for(int i = 0;i < Player.Count;i++){
             System.out.println("speler " + player[Player.Beurt].kleur + " is aan de beurt");
@@ -221,24 +266,3 @@ public class Main {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
