@@ -1,6 +1,7 @@
 import java.util.Arrays;
 import java.util.Scanner;
 
+//gare manier om kleuren te krijgen
 class ConsoleColor{
     static final String RESET = "\u001B[0m";
     static final String BLACK = "\u001B[30m";
@@ -18,23 +19,26 @@ class Player{
     static final String[] playerConsoleColors = {ConsoleColor.RED,ConsoleColor.GREEN,ConsoleColor.YELLOW,ConsoleColor.BLUE,ConsoleColor.BLACK,ConsoleColor.WHITE};
 
     static int Count;
-    static int Beurt;
+    static int turn;
 
     int consoleColorId;
     int playersBehind;
-    boolean beurtOverslaan;
     int pos;
+
+    boolean beurtOverslaan;
+
     String kleur;
+    //beweegt de speler naar de nieuwe positie als er geen speler al op die positie staat
     void movePlayer(int pos){
         for(int i = 0;i < Player.Count;i++){
-            if(i != Player.Beurt && Main.player[i].pos == pos){
+            if(i != Player.turn && Main.player[i].pos == pos){
                 return;
             }
         }
         this.pos = pos;
     }
 }
-
+//getallen verwoorden om vakjes een naam te geven
 class Vak{
     static final byte NORMAL = 0;
     static final byte HERHAAL = 1;
@@ -54,6 +58,7 @@ public class Main {
     static byte[] board = new byte[BOARDSZ+12];
     static Player[] player;
     static int rndSeed;
+    //https://en.wikipedia.org/wiki/Xorshift
     static int throwDice(){
         int t = (int)(System.currentTimeMillis()+rndSeed);
         t ^= t >> 3;
@@ -63,6 +68,7 @@ public class Main {
         return t % 6 + 1;
     }
     static void printBoard(){
+        //verwisseld de spelerkleur met het bordid & geeft aan dat er een speler op staat
         for(int i = 0;i < Player.Count;i++){
             if((board[player[i].pos]&Vak.PLAYER)==0) {
                 board[player[i].pos] ^= player[i].consoleColorId;
@@ -111,6 +117,7 @@ public class Main {
             }
             System.out.print("\n");
         }
+        //verwisseld de boel weer terug en untoggle de speler flag
         for(int i = 0;i < Player.Count;i++){
             if((board[player[i].pos]&Vak.PLAYER)==Vak.PLAYER) {
                 board[player[i].pos] &= ~Vak.PLAYER;
@@ -121,20 +128,24 @@ public class Main {
         }
     }
     static void playerTrapped(){
+        //de manier om te checken of er al een speler langs de put/gevangenis langs is geweest is om
+        //bij te houden hoeveel spelers er achter een speler staan
         for(int i = 0;i < Player.Count;i++){
-            if(i != Player.Beurt && player[i].pos < player[Player.Beurt].pos){
-                player[Player.Beurt].playersBehind++;
+            if(i != Player.turn && player[i].pos < player[Player.turn].pos){
+                player[Player.turn].playersBehind++;
             }
         }
-        if (player[Player.Beurt].playersBehind == 0) {
-            player[Player.Beurt].beurtOverslaan = true;
+        // als er geen spelers achterstaan dan slaat de speler een beurt over
+        if (player[Player.turn].playersBehind == 0) {
+            player[Player.turn].beurtOverslaan = true;
         }
     }
     static void playerTurn(int id,int posBuf){
+        //hier staan alle speciale vakjes (zie ganzebord spelregels)
         switch(board[posBuf]){
         case Vak.HERHAAL:
             System.out.println("Je gaat 2X zo hard");
-            posBuf += posBuf - player[Player.Beurt].pos;
+            posBuf += posBuf - player[Player.turn].pos;
             playerTurn(id,posBuf);
             break;
         case Vak.BRUG:
@@ -143,7 +154,7 @@ public class Main {
             break;
         case Vak.HERBERG:
             System.out.println("Je overnacht in de herberg, je doet een ronde niet meer mee");
-            player[Player.Beurt].beurtOverslaan = true;
+            player[Player.turn].beurtOverslaan = true;
             break;
         case Vak.GEVANGENIS:
             System.out.println("Je bent in de gevangenis gekomen!");
@@ -162,22 +173,23 @@ public class Main {
             posBuf = 0;
             break;
         case Vak.FINISH:
-            System.out.println("het spel is afgelopen, de " + player[Player.Beurt].kleur + " heeft gewonnen");
+            System.out.println("het spel is afgelopen, de " + player[Player.turn].kleur + " heeft gewonnen");
             System.exit(0);
             break;
         case Vak.TE_VER:
             posBuf -= (64-posBuf)*2;
             break;
         }
-        player[Player.Beurt].movePlayer(posBuf);
+        player[Player.turn].movePlayer(posBuf);
     }
     static void playerTurn(Scanner scan){
         scan.next();
         int diceValue = throwDice() + throwDice();
         System.out.println("je hebt " + diceValue + " gegooit");
-        playerTurn(Player.Beurt,player[Player.Beurt].pos+diceValue);
+        playerTurn(Player.turn,player[Player.turn].pos+diceValue);
     }
     public static void main(String[] args){
+        //init het bord
         for(int i = 9;i < BOARDSZ;i+=9){
             board[i]   = Vak.HERHAAL;
             board[i-4] = Vak.HERHAAL;
@@ -200,79 +212,83 @@ public class Main {
         Player.Count = scan.nextInt();
         player = new Player[Player.Count];
 
-        for (int i = 0; i < Player.Count; i++) {
+        for (int i = 0;i < Player.Count;i++){
             player[i] = new Player();
             System.out.println("Welke kleur?");
-            System.out.println("rood =  0");
+            System.out.println("rood  = 0");
             System.out.println("groen = 1");
-            System.out.println("geel =  2");
+            System.out.println("geel  = 2");
             System.out.println("blauw = 3");
             System.out.println("zwart = 4");
-            System.out.println("wit =   5");
-            int colSel = scan.nextInt();
+            System.out.println("wit   = 5");
+            int colSel = -1;
+            while(colSel<0||colSel>5){
+                colSel = scan.nextInt();
+            }
             player[i].consoleColorId = colSel;
             player[i].kleur = Player.playerColors[colSel];
 
         }
         int highestThrow = 0;
 
-        for (int i = 0; i < Player.Count; i++) {
-            int dobbelWaarde = throwDice();
-            System.out.println("speler " + player[i].kleur + " heeft " + dobbelWaarde + " gegooit");
-            if(dobbelWaarde > highestThrow){
-                Player.Beurt = i;
-                highestThrow = dobbelWaarde;
+        for (int i = 0;i < Player.Count;i++) {
+            int diceValue = throwDice();
+            System.out.println("speler " + player[i].kleur + " heeft " + diceValue + " gegooit");
+            if(diceValue > highestThrow){
+                Player.turn = i;
+                highestThrow = diceValue;
             }
         }
 
-        System.out.println("speler " + player[Player.Beurt].kleur + " mag beginnen");
+        System.out.println("speler " + player[Player.turn].kleur + " mag beginnen");
         for(int i = 0;i < Player.Count;i++){
-            System.out.println("speler " + player[Player.Beurt].kleur + " is aan de beurt");
+            System.out.println("speler " + player[Player.turn].kleur + " is aan de beurt");
             scan.next();
             int dice1 = throwDice();
             int dice2 = throwDice();
 
             System.out.println("je hebt " + (dice1 + dice2) + " gegooit");
-
+            //als de speler een specifieke combinatie van 9 gooit dan word de speler hiernaar verplaatst
+            //is om te voorkomen dat de speler gelijk finished
             if((dice1==4&&dice2==5)||(dice1==5&&dice2==4)){
-                player[Player.Beurt].pos = 53;
+                player[Player.turn].pos = 53;
             }
             else if((dice1==3&&dice2==6)||(dice1==6&&dice2==3)){
-                player[Player.Beurt].pos = 26;
+                player[Player.turn].pos = 26;
             }
             else{
                 playerTurn(i,dice1+dice2);
             }
-            Player.Beurt++;
-            if(Player.Beurt == Player.Count){
-                Player.Beurt = 0;
+            Player.turn++;
+            if(Player.turn == Player.Count){
+                Player.turn = 0;
             }
             printBoard();
         }
         for(;;){
             for(int i = 0;i < Player.Count;i++) {
-                System.out.println("speler " + player[Player.Beurt].kleur + " is aan de beurt");
-                if(player[Player.Beurt].beurtOverslaan){
-                    player[Player.Beurt].beurtOverslaan = false;
+                System.out.println("speler " + player[Player.turn].kleur + " is aan de beurt");
+                if(player[Player.turn].beurtOverslaan){
+                    player[Player.turn].beurtOverslaan = false;
                 }
-                else if(player[Player.Beurt].playersBehind > 0){
+                else if(player[Player.turn].playersBehind > 0){
                     int playersBehind = 0;
                     for(int i2 = 0;i2 < Player.Count;i2++){
-                        if(player[Player.Beurt].pos > player[i2].pos){
+                        if(player[Player.turn].pos > player[i2].pos){
                             playersBehind++;
                         }
                     }
-                    if(playersBehind != player[Player.Beurt].playersBehind){
-                        player[Player.Beurt].playersBehind = 0;
+                    if(playersBehind != player[Player.turn].playersBehind){
+                        player[Player.turn].playersBehind = 0;
                         playerTurn(scan);
                     }
                 }
                 else{
                     playerTurn(scan);
                 }
-                Player.Beurt++;
-                if(Player.Beurt == Player.Count){
-                    Player.Beurt = 0;
+                Player.turn++;
+                if(Player.turn == Player.Count){
+                    Player.turn = 0;
                 }
                 printBoard();
             }
