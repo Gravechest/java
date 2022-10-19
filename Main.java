@@ -68,9 +68,9 @@ public class Main {
         //verwisseld de spelerkleur met het bordid & geeft aan dat er een speler op staat
         for(int i = 0;i < Player.Count;i++){
             if((board[player[i].pos]&Vak.PLAYER)==0) {
-                board[player[i].pos]     ^= player[i].consoleColorId;
-                player[i].consoleColorId ^= board[player[i].pos];
-                board[player[i].pos]     ^= player[i].consoleColorId;
+                int temp = board[player[i].pos];
+                player[i].consoleColorId = board[player[i].pos];
+                board[player[i].pos] = temp;
                 board[player[i].pos]     |= Vak.PLAYER;
             }
         }
@@ -118,9 +118,9 @@ public class Main {
         for(int i = 0;i < Player.Count;i++){
             if((board[player[i].pos]&Vak.PLAYER)==Vak.PLAYER) {
                 board[player[i].pos]     &= ~Vak.PLAYER;
-                board[player[i].pos]     ^= player[i].consoleColorId;
-                player[i].consoleColorId ^= board[player[i].pos];
-                board[player[i].pos]     ^= player[i].consoleColorId;
+                int temp = board[player[i].pos];
+                player[i].consoleColorId = board[player[i].pos];
+                board[player[i].pos] = (byte)temp;
             }
         }
     }
@@ -236,7 +236,6 @@ public class Main {
                 highestThrow = diceValue;
             }
         }
-
         System.out.println("speler " + player[Player.turn].kleur + " mag beginnen");
         for(int i = 0;i < Player.Count;i++){
             System.out.println("speler " + player[Player.turn].kleur + " is aan de beurt");
@@ -262,7 +261,7 @@ public class Main {
             }
             printBoard();
         }
-        for(;;){
+        while(true){
             for(int i = 0;i < Player.Count;i++) {
                 System.out.println("speler " + player[Player.turn].kleur + " is aan de beurt");
                 if(player[Player.turn].beurtOverslaan){
@@ -292,24 +291,3 @@ public class Main {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
